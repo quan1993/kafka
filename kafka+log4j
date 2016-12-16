@@ -1,0 +1,44 @@
+maven中pom.xml文件中引入依赖
+ <dependency>
+			<groupId>org.apache.kafka</groupId>
+			<artifactId>kafka_2.9.2</artifactId>
+			<version>0.8.2.1</version>
+		</dependency>
+        注意kafka的版本，有的版本没有KafkaLog4jAppender类
+        <br>
+> 配置log4j.properties
+log4j.rootLogger=INFO,console
+
+# for package com.demo.kafka, log would be sent to kafka appender.
+log4j.logger.com.demo.kafka=DEBUG,kafka
+
+# appender kafka
+log4j.appender.kafka=kafka.producer.KafkaLog4jAppender
+log4j.appender.kafka.topic=kafka
+# multiple brokers are separated by comma ",".
+log4j.appender.kafka.brokerList=localhost:9092, localhost:9093, localhost:9094, localhost:9095
+log4j.appender.kafka.compressionType=none
+log4j.appender.kafka.syncSend=true
+log4j.appender.kafka.layout=org.apache.log4j.PatternLayout
+log4j.appender.kafka.layout.ConversionPattern=%d [%-5p] [%t] - [%l] %m%n
+ 
+# appender console
+log4j.appender.console=org.apache.log4j.ConsoleAppender
+log4j.appender.console.target=System.out
+log4j.appender.console.layout=org.apache.log4j.PatternLayout
+log4j.appender.console.layout.ConversionPattern=%d [%-5p] [%t] - [%l] %m%n  
+<br><br>
+或配置log4j.xml
+     <appender name="kafka" class="kafka.producer.KafkaLog4jAppender">
+		<param name="topic" value="kafka"></param>
+		<param name="brokerList" value="192.168.127.150:9092,192.168.127.150:9093,192.168.127.150:9094"></param>
+		<param name="compressionType" value="none"></param>
+		<param name="syncSend" value="true"></param>
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="[%d{yyyy-MM-dd HH:mm:ss\} %-5p] [%t] {%c:%L}-%m%n"></param>
+		</layout>
+	</appender>
+    <root>
+		<level value="INFO" />
+		<appender-ref ref="kafka" />
+	</root>
