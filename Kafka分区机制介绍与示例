@@ -1,5 +1,4 @@
-原作者：http://lxw1234.com/archives/2015/10/538.htm
-关键字：Kafka分区、Partition
+
 
 Kafka中可以将Topic从物理上划分成一个或多个分区（Partition），每个分区在物理上对应一个文件夹，以”topicName_partitionIndex”的命名方式命名，该文件夹下存储这个分区的所有消息(.log)和索引文件(.index)，这使得Kafka的吞吐率可以水平扩展。
 
@@ -7,7 +6,7 @@ Kafka中可以将Topic从物理上划分成一个或多个分区（Partition）�
 
 上面所说的分区规则，是实现了kafka.producer.Partitioner接口的类，可以自定义。比如，下面的代码SimplePartitioner中，将消息的key做了hashcode，然后和分区数（numPartitions）做模运算，使得每一个key都可以分布到一个分区中：
 
-package com.lxw1234.kafka;
+package com.dhcc.kafka;
  
 import kafka.producer.Partitioner;
 import kafka.utils.VerifiableProperties;
@@ -34,14 +33,14 @@ kafka partition
 
 创建带分区的Topic
 
-现在创建一个topic “lxw1234”，为该topic指定4个分区，那么这4个分区将会在每个broker上各分布一个：
+现在创建一个topic “kafka”，为该topic指定4个分区，那么这4个分区将会在每个broker上各分布一个：
 
 ./kafka-topics.sh 
 --create 
 --zookeeper zk1:2181,zk2:2181,zk3:2181 
 --replication-factor 1
 --partitions 4 
---topic lxw1234
+--topic kafka
 kafka partition
 
 这样所有的分区就均匀分布在集群中，如果创建topic时候指定了3个分区，那么就有一个broker上没有该topic的分区。
@@ -50,7 +49,7 @@ kafka partition
 
 现在用一个生产者示例（PartitionerProducer），向Topic lxw1234中发送消息。该生产者使用的分区规则，就是上面的SimplePartitioner。从0-10一共11条消息，每条消息的key为”key”+index，消息内容为”key”+index+”–value”+index。比如：key0–value0、key1–value1、、、key10–value10。
 
-package com.lxw1234.kafka;
+package com.dhcc.kafka;
  
 import java.util.Properties;
  
@@ -63,9 +62,9 @@ public class PartitionerProducer {
 		Properties props = new Properties();
 		props.put("serializer.class", "kafka.serializer.StringEncoder");
 		props.put("metadata.broker.list", "127.0.0.17:9091,127.0.0.17:9092,127.0.0.102:9091,127.0.0.102:9092");
-		props.put("partitioner.class", "com.lxw1234.kafka.SimplePartitioner");
+		props.put("partitioner.class", "com.dhcc.kafka.SimplePartitioner");
 		Producer<String, String> producer = new Producer<String, String>(new ProducerConfig(props));
-	    String topic = "lxw1234";
+	    String topic = "kafka";
 	    for(int i=0; i<=10; i++) {
 	    	String k = "key" + i;
 	    	String v = k + "--value" + i;
@@ -93,7 +92,7 @@ hashcode(”key3”) % 4 = 0
 
 下面的消费者代码用来验证，在消费数据时，打印出消息所在的分区及消息内容：
 
-package com.lxw1234.kafka;
+package com.dhcc.kafka;
  
 import java.util.HashMap;
 import java.util.List;
@@ -140,20 +139,5 @@ public class MyConsumer {
 
 先启动消费者，再运行生产者。
 
-之后在消费者的控制台可以看到如下输出：
 
-kafka partition
 
-结果和正常预期一致。
-
-相关阅读：
-
-Kafka架构和原理深度剖析
-Kafka安装配置测试
-
-接下来将学习使用Kafka的底层API（low-level API），指定分区和offset来消费数据。
-
-您可以关注 lxw的大数据田地 ，或者 加入邮件列表 ，随时接收博客更新的通知邮件。
- 
-
-如果觉得本博客对您有帮助，请 赞助作者 。
